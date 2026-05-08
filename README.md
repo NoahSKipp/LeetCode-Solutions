@@ -7,7 +7,7 @@ A repository containing a collection of my solutions to various LeetCode problem
 <!-- STATS_END -->
 
 ## 🛠️ Repository Structure
-- Each folder contains the solution and a description of the problem.
+- Each folder contains the solution of a LeetCode problem.
 
 
 ---
