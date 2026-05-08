@@ -1,0 +1,56 @@
+name: Update LeetCode Stats
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Update README
+        run: |
+          python3 -c "
+          import os
+          import re
+          from datetime import datetime
+
+          ext_map = {'py': 'Python', 'js': 'JavaScript', 'cpp': 'C++', 'java': 'Java', 'ts': 'TypeScript'}
+          counts = {}
+
+          for root, dirs, files in os.walk('.'):
+              if '.github' in root or '.git' in root:
+                  continue
+              for f in files:
+                  if '.' in f:
+                      ext = f.split('.')[-1].lower()
+                      if ext in ext_map:
+                          counts[ext] = counts.get(ext, 0) + 1
+
+          stats_lines = [f'- [{ext_map.get(k, k.upper())}] - {v} Solutions' for k, v in sorted(counts.items(), key=lambda x: x[1], reverse=True)]
+          stats_text = '\n'.join(stats_lines)
+          date_text = datetime.now().strftime('%d.%m.%Y %H:%M')
+
+          with open('README.md', 'r') as f:
+              content = f.read()
+
+          content = re.sub(r'<!-- STATS_START -->.*?<!-- STATS_END -->', f'<!-- STATS_START -->\n{stats_text}\n<!-- STATS_END -->', content, flags=re.DOTALL)
+          content = re.sub(r'<!-- DATE_START -->.*?<!-- DATE_END -->', f'<!-- DATE_START -->{date_text}<!-- DATE_END -->', content)
+
+          with open('README.md', 'w') as f:
+              f.write(content)
+          "
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "docs: update stats (German format)" || exit 0
+          git push
